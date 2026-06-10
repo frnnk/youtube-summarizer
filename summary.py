@@ -8,8 +8,6 @@ Decoupling: this module never imports ``ui``. Progress is reported through an
 injected ``on_progress`` callback supplied by ``app.py``.
 """
 
-from __future__ import annotations
-
 import operator
 from typing import Annotated, Callable, TypedDict
 from langchain.chat_models import init_chat_model
@@ -28,18 +26,14 @@ def _noop(_: str) -> None:
 
 def build_model(settings) -> BaseChatModel:
     """
-    Constructs an agnostic chat model from a primed Settings object.
-
-    Requires Settings.model and Settings.temperature
+    Constructs an agnostic chat model from a `Settings` object.
     """
     return init_chat_model(settings.model, temperature=settings.temperature)
 
 
 def _style_instruction(settings) -> str:
     """
-    Constructs a prompt header pertaining to the style from a primed Settings object.
-
-    Uses `Settings.summary_style` and `Settings.summary_length` but is not required.
+    Constructs a short style guide according to a `Settings` object.
     """
     shape = {
         "bullets": "Format the summary as concise bullet points.",
@@ -59,24 +53,35 @@ def summarize(
         settings, *, 
         on_progress: ProgressFn | None = None
     ) -> str:
-    """Summarize transcript ``text`` according to ``settings``.
+    """
+    Summarize transcript `text` according to a `Settings` object.
 
-    ``on_progress`` is an injected callback (e.g. from ``ui``) invoked with a short
-    status string between steps; pass ``None`` to silence progress.
+    `on_progress` is an injected callback (e.g. from `ui`) invoked with a short
+    status string between steps; pass `None` to silence progress.
     """
     progress = on_progress or _noop
     model = build_model(settings)
 
+    # if transcript is short enough we can resort to direct summarization
+    # otherwise we go with a mapreduce strategy
     if len(text) <= settings.chunk_chars:
         progress("Summarizing transcript")
-        return _stuff_summary(text, model, settings)
+        return _short_summary(text, model, settings)
 
     chunks = util.chunk_text(text, settings.chunk_chars)
     progress(f"Long transcript: map-reduce over {len(chunks)} chunks")
     return _mapreduce_summary(chunks, model, settings, progress)
 
 
-def _stuff_summary(text: str, model: BaseChatModel, settings) -> str:
+def _short_summary(
+        text: str, 
+        model: BaseChatModel, 
+        settings
+    ) -> str:
+    """
+    Perform a simple summary with our model, using configurations specified in the
+    `Settings` object.
+    """
     messages = [
         SystemMessage(
             "You are an expert at summarizing video transcripts. "
@@ -87,7 +92,7 @@ def _stuff_summary(text: str, model: BaseChatModel, settings) -> str:
     return model.invoke(messages).content
 
 
-# --- LangGraph map-reduce -------------------------------------------------
+# LangGraph map-reduce system
 
 class _State(TypedDict):
     chunks: list[str]
@@ -100,11 +105,21 @@ class _ChunkState(TypedDict):
 
 
 def _mapreduce_summary(
-    chunks: list[str], model: BaseChatModel, settings, progress: ProgressFn
-) -> str:
-    """Run a map-reduce summary as a small LangGraph: map chunks, then reduce."""
+        chunks: list[str], 
+        model: BaseChatModel, 
+        settings, 
+        progress: ProgressFn
+    ) -> str:
+    """
+    Run a map-reduce summary via a small LangGraph system: map chunks, then reduce.
 
+    `progress` is called periodically to send back progress updates.
+    """
     def map_chunk(state: _ChunkState) -> dict:
+        """
+        Summarizes one chunk of a video transcript.
+        """
+        # state is the output of a Send payload
         resp = model.invoke(
             [
                 SystemMessage("Summarize this portion of a video transcript faithfully."),
@@ -114,9 +129,15 @@ def _mapreduce_summary(
         return {"chunk_summaries": [resp.content]}
 
     def fan_out(state: _State):
+        """
+        Sends N payloads to map_chunk, where N is the number of chunks.
+        """
         return [Send("map_chunk", {"chunk": c}) for c in state["chunks"]]
 
     def reduce(state: _State) -> dict:
+        """
+        Aggregates all transcript chunks into one summary.
+        """
         progress("Combining chunk summaries")
         combined = "\n\n".join(
             f"- Section {i + 1}: {s}"
@@ -144,3 +165,13 @@ def _mapreduce_summary(
 
     result = app.invoke({"chunks": chunks, "chunk_summaries": [], "final": ""})
     return result["final"]
+
+if __name__ == '__main__':
+    from settings import load_settings
+    settings = load_settings()
+    result = summarize(
+        text="",
+        settings=settings
+    )
+    print(result)
+    pass
