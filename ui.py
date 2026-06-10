@@ -1,11 +1,6 @@
-"""Presentation module (Rich).
-
-Owns all terminal rendering. Imports nothing from other project modules; it exposes
-a ``progress_callback`` that ``app.py`` injects into ``summary.summarize`` so the
-summarizer can report progress without importing this module.
 """
-
-from __future__ import annotations
+Presentation module (Rich): owns all terminal rendering.
+"""
 
 from contextlib import contextmanager
 
@@ -17,7 +12,9 @@ console = Console()
 
 
 def show_summary(summary: str, *, title: str = "Summary", meta: str | None = None) -> None:
-    """Render the summary inside a titled panel, with optional metadata subtitle."""
+    """
+    Render `summary` inside a titled panel, with an optional metadata subtitle.
+    """
     console.print(
         Panel(
             Markdown(summary),
@@ -30,7 +27,9 @@ def show_summary(summary: str, *, title: str = "Summary", meta: str | None = Non
 
 
 def show_error(message: str) -> None:
-    """Render an error message to stderr in a red panel."""
+    """
+    Render an error message to stderr in a red panel.
+    """
     Console(stderr=True).print(
         Panel(message, title="[bold red]Error[/bold red]", border_style="red")
     )
@@ -38,11 +37,15 @@ def show_error(message: str) -> None:
 
 @contextmanager
 def status(label: str):
-    """Spinner context manager for long-running steps."""
+    """
+    Spinner context manager for long-running steps.
+    """
     with console.status(f"[cyan]{label}…[/cyan]", spinner="dots") as st:
         yield st
 
 
 def progress_callback(message: str) -> None:
-    """Injectable progress sink — prints a dim status line."""
+    """
+    Injectable progress sink that prints a dim status line.
+    """
     console.print(f"[dim]› {message}[/dim]")

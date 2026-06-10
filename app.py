@@ -1,12 +1,8 @@
-"""CLI entrypoint and orchestrator.
-
-This is the *only* module that imports the feature modules. It parses arguments,
-builds a `Settings` object, and wires the modules together — including the
-dependency-injection points (config passed down, and ``ui.progress_callback``
-injected into ``summary.summarize``). Modules never import each other.
 """
+CLI entrypoint and orchestrator: the only module that imports the feature modules.
 
-from __future__ import annotations
+Parses CLI arguments, builds a `Settings` object, and wires the modules together.
+"""
 
 import argparse
 import sys
@@ -19,6 +15,9 @@ from settings import load_settings
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """
+    Define and parse the command-line interface.
+    """
     parser = argparse.ArgumentParser(
         prog="yt-summarize",
         description="Summarize a YouTube video from its link.",
@@ -51,7 +50,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def build_settings(args: argparse.Namespace):
-    """Load settings, then apply CLI overrides (CLI wins over env/defaults)."""
+    """
+    Load settings, then apply CLI overrides (CLI wins over env and defaults).
+    """
     settings = load_settings()
     if args.model:
         settings.model = args.model
@@ -65,6 +66,9 @@ def build_settings(args: argparse.Namespace):
 
 
 def run(args: argparse.Namespace) -> int:
+    """
+    Fetch the transcript, summarize it, and render the result.
+    """
     settings = build_settings(args)
 
     video_id = util.extract_video_id(args.url)
@@ -75,8 +79,7 @@ def run(args: argparse.Namespace) -> int:
     if args.show_transcript:
         ui.show_summary(text, title="Transcript", meta=f"video {video_id}")
 
-    # Dependency injection: the summarizer reports progress via ui's callback
-    # without ever importing ui.
+    # Inject ui's progress callback so summary can report progress without importing ui
     with ui.status("Summarizing"):
         result = summary.summarize(
             text, settings, on_progress=ui.progress_callback
@@ -89,6 +92,9 @@ def run(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """
+    CLI entrypoint: parse args, run, and map errors to clean messages and exit codes.
+    """
     args = parse_args(argv)
     try:
         return run(args)

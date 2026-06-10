@@ -1,11 +1,7 @@
-"""Summarization module (model-agnostic, LangChain + LangGraph).
+"""
+Summarization module (model-agnostic, LangGraph ecosystem).
 
-The backend model is selected at runtime from a ``provider:model`` string via
-``init_chat_model``, so this module never hard-codes a vendor. Short transcripts
-take a single "stuff" prompt; long ones run a LangGraph map-reduce.
-
-Decoupling: this module never imports ``ui``. Progress is reported through an
-injected ``on_progress`` callback supplied by ``app.py``.
+The backend model is selected at runtime from a `Settings` object.
 """
 
 import operator
@@ -62,7 +58,7 @@ def summarize(
     progress = on_progress or _noop
     model = build_model(settings)
 
-    # if transcript is short enough we can resort to direct summarization
+    # If transcript is short enough we can resort to direct summarization
     # otherwise we go with a mapreduce strategy
     if len(text) <= settings.chunk_chars:
         progress("Summarizing transcript")
@@ -119,7 +115,7 @@ def _mapreduce_summary(
         """
         Summarizes one chunk of a video transcript.
         """
-        # state is the output of a Send payload
+        # State is the output of a Send payload
         resp = model.invoke(
             [
                 SystemMessage("Summarize this portion of a video transcript faithfully."),
@@ -166,12 +162,6 @@ def _mapreduce_summary(
     result = app.invoke({"chunks": chunks, "chunk_summaries": [], "final": ""})
     return result["final"]
 
+
 if __name__ == '__main__':
-    from settings import load_settings
-    settings = load_settings()
-    result = summarize(
-        text="",
-        settings=settings
-    )
-    print(result)
     pass
