@@ -13,7 +13,7 @@ yt-summarize "https://youtu.be/U93EPbwyrUA"
 ## Features
 
 **Summarize**
-- Accepts any YouTube URL shape — `watch?v=`, `youtu.be/`, `/shorts/`, `/embed/`, `/live/`, share links with `?si=…`, or a bare 11-character id
+- Accepts any YouTube URL shape: `watch?v=`, `youtu.be/`, `/shorts/`, `/embed/`, `/live/`, share links with `?si=…`, or a bare 11-character id
 - Pulls human or auto-generated captions via [`youtube-transcript-api`](https://pypi.org/project/youtube-transcript-api/)
 - Short transcript → single-pass summary; long transcript → LangGraph map-reduce over chunks
 - Tune the output: `--style` (bullets or paragraph) and `--length` (short, medium, long)
@@ -99,7 +99,7 @@ Two kinds of configuration, kept deliberately separate:
 | **Secrets** | environment / `.env` | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` |
 | **Preferences** | JSON config file | `model`, `temperature`, `chunk_chars`, `summary_style`, `summary_length`, `languages` |
 
-**Editing preferences.** Run `yt-summarize --settings` for an interactive editor, or hand-edit the JSON. Saves are atomic — the file is never left half-written.
+**Editing preferences.** Run `yt-summarize --settings` for an interactive editor, or hand-edit the JSON. Saves are atomic: the file is never left half-written.
 
 **Config file resolution** (first match wins):
 
@@ -156,7 +156,7 @@ flowchart TB
     app -.summary panel.-> user
 ```
 
-Solid arrows are code dependencies (imports). Dotted arrows are runtime flow. The design rule: only `app.py` imports the feature modules (`fetch`, `summary`, `ui`); the modules never import each other. When one needs another's behavior, `app.py` wires it in — for example, it injects `ui.progress_callback` into `summary.summarize` so the summarizer can report progress without importing `ui`. The helpers (`util`, `settings`) are plain shared utilities any module may import.
+Solid arrows are code dependencies (imports). Dotted arrows are runtime flow. The design rule: only `app.py` imports the feature modules (`fetch`, `summary`, `ui`); the modules never import each other. When one needs another's behavior, `app.py` wires it in. For example, it injects `ui.progress_callback` into `summary.summarize` so the summarizer can report progress without importing `ui`. The helpers (`util`, `settings`) are plain shared utilities any module may import.
 
 ## Project structure
 
