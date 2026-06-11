@@ -1,5 +1,6 @@
-"""Manual test for summary.py — needs an API key in .env (ANTHROPIC_API_KEY or
-OPENAI_API_KEY). Run:  uv run test_summary.py
+"""
+Manual test for `summary.py` — needs an API key in the environment
+(`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`). Run: uv run python tests/test_summary.py
 """
 
 from youtube_summarizer import summary, ui
@@ -45,6 +46,9 @@ basically builds itself. Thanks for watching, and I'll see you in the next one.
 
 
 def run(label: str, settings) -> None:
+    """
+    Summarize the sample transcript and render it under `label`.
+    """
     print(f"\n===== {label} (chunk_chars={settings.chunk_chars}, "
           f"model={settings.model}) =====")
     result = summary.summarize(
