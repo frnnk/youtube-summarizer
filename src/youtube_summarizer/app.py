@@ -7,11 +7,8 @@ Parses CLI arguments, builds a `Settings` object, and wires the modules together
 import argparse
 import sys
 
-import fetch
-import summary
-import ui
-import util
-from settings import load_settings
+from youtube_summarizer import fetch, summary, ui, util
+from youtube_summarizer.settings import load_settings
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

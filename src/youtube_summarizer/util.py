@@ -58,6 +58,8 @@ def join_snippets(snippets: list[dict]) -> str:
     Flatten transcript snippet dicts into a single whitespace-normalized string.
     """
     text = " ".join(s.get("text", "") for s in snippets)
+
+    # Substitutes any series of white spaces with one single white space
     return re.sub(r"\s+", " ", text).strip()
 
 

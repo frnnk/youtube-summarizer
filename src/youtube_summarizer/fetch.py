@@ -13,7 +13,7 @@ from youtube_transcript_api._errors import (
     VideoUnavailable,
 )
 
-import util
+from youtube_summarizer import util
 
 
 class TranscriptError(Exception):
