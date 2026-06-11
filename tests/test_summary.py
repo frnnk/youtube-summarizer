@@ -2,9 +2,8 @@
 OPENAI_API_KEY). Run:  uv run test_summary.py
 """
 
-import summary
-import ui
-from settings import load_settings
+from youtube_summarizer import summary, ui
+from youtube_summarizer.settings import load_settings
 
 TRANSCRIPT = """
 Hey everyone, welcome back to the channel. Today we're talking about why most
