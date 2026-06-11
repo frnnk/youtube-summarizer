@@ -11,3 +11,6 @@ wheels/
 
 # Secrets
 .env
+
+# Local dev preferences (use settings.example.json as the template)
+settings.dev.json

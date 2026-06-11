@@ -1,0 +1,10 @@
+{
+  "chunk_chars": 8000,
+  "languages": [
+    "en"
+  ],
+  "model": "anthropic:claude-haiku-4-5",
+  "summary_length": "medium",
+  "summary_style": "bullets",
+  "temperature": 0.0
+}
