@@ -45,12 +45,30 @@ Re-run the same command anytime to pull the latest commit. `--reinstall` forces 
 
 After installing, `uv` will tell you if its bin directory isn't on `PATH` yet; follow its hint (typically `uv tool update-shell`, then restart your terminal) so the `yt-summarize` command is reachable.
 
-**Set an API key.** The key is a secret, so it lives in the environment, not the config file. Export the one matching your model's provider otherwise an error will be thrown:
+**Set an API key.** The key is a secret, so it lives in the environment, not the config file. Export the one variable matching your model's provider, or an error will be thrown. The variable name is fixed per provider:
+
+| Provider | Environment variable | Key format |
+|---|---|---|
+| Anthropic | `ANTHROPIC_API_KEY` | `sk-ant-...` |
+| OpenAI | `OPENAI_API_KEY` | `sk-proj-...` or `sk-...` |
+| Google (Gemini) | `GOOGLE_API_KEY` | `AIza...` |
+
+Append the line for your provider to your shell startup file, then reload it. Paste the **entire** key, not a truncated snippet: the `...` below is a placeholder for the full string the provider gave you (typically 40 or more characters), and a partial key authenticates to nothing.
 
 ```bash
-echo 'export ANTHROPIC_API_KEY="sk-ant-..."' >> ~/.bashrc   # or OPENAI_API_KEY
+echo 'export ANTHROPIC_API_KEY="sk-ant-your-full-key-here"' >> ~/.bashrc   # Anthropic
+echo 'export OPENAI_API_KEY="sk-proj-your-full-key-here"'   >> ~/.bashrc   # OpenAI
+echo 'export GOOGLE_API_KEY="AIza-your-full-key-here"'      >> ~/.bashrc   # Google
 source ~/.bashrc
 ```
+
+**Point the model at your key.** The default model is `anthropic:claude-haiku-4-5`. If you supplied an OpenAI or Google key instead, you must tell the tool which model to use, otherwise it will try the default Anthropic model and fail with a missing-key error. Run the interactive editor once after installing to set the model to match your provider:
+
+```bash
+yt-summarize --settings        # set "model" to e.g. openai:gpt-4o-mini or google_genai:gemini-2.0-flash
+```
+
+This persists the choice so every later run uses it. To override for a single run instead, pass `--model provider:model`.
 
 **Dev workflow** (run from a local clone, picks up code changes immediately):
 
