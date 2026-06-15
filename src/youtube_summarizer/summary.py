@@ -21,6 +21,24 @@ def _noop(_: str) -> None:
     pass
 
 
+def _content_text(resp) -> str:
+    """
+    Extracts plain text from a model response whose `content` may be a string or a
+    list of content blocks, as providers like Gemini return.
+    """
+    content = resp.content
+    if isinstance(content, str):
+        return content
+    # List form: keep text blocks, drop reasoning/thinking and other block types
+    parts = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict) and block.get("type", "text") == "text":
+            parts.append(block.get("text", ""))
+    return "".join(parts).strip()
+
+
 def build_model(settings) -> BaseChatModel:
     """
     Constructs an agnostic chat model from a `Settings` object.
@@ -86,7 +104,7 @@ def _short_summary(
         ),
         HumanMessage(f"Summarize this video transcript:\n\n{text}"),
     ]
-    return model.invoke(messages).content
+    return _content_text(model.invoke(messages))
 
 
 # LangGraph map-reduce system
@@ -123,7 +141,7 @@ def _mapreduce_summary(
                 HumanMessage(state["chunk"]),
             ]
         )
-        return {"chunk_summaries": [resp.content]}
+        return {"chunk_summaries": [_content_text(resp)]}
 
     def fan_out(state: _State):
         """
@@ -150,7 +168,7 @@ def _mapreduce_summary(
                 HumanMessage(combined),
             ]
         )
-        return {"final": resp.content}
+        return {"final": _content_text(resp)}
 
     graph = StateGraph(_State)
     graph.add_node("map_chunk", map_chunk)

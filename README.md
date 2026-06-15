@@ -65,7 +65,7 @@ source ~/.bashrc
 **Point the model at your key.** The default model is `anthropic:claude-haiku-4-5`. If you supplied an OpenAI or Google key instead, you must tell the tool which model to use, otherwise it will try the default Anthropic model and fail with a missing-key error. Run the interactive editor once after installing to set the model to match your provider:
 
 ```bash
-yt-summarize --settings        # set "model" to e.g. openai:gpt-4o-mini or google_genai:gemini-2.0-flash
+yt-summarize --settings        # set "model" to e.g. openai:gpt-4o-mini or google_genai:gemini-3.5-flash
 ```
 
 This persists the choice so every later run uses it. To override for a single run instead, pass `--model provider:model`.

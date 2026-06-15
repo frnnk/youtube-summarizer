@@ -88,9 +88,13 @@ def _ask_model(current_model: str | None) -> str | None:
     Prompt for a model: pick a preset or enter a custom `provider:model` id.
     """
     custom = "Custom…"
-    choices = list(settings.MODEL_PRESETS)
-    if current_model and current_model not in choices:
-        choices.insert(0, current_model)
+    presets = settings.MODEL_PRESETS
+    choices = [
+        questionary.Choice(title=f"{model_id}  ({blurb})", value=model_id)
+        for model_id, blurb in presets.items()
+    ]
+    if current_model and current_model not in presets:
+        choices.insert(0, questionary.Choice(title=current_model, value=current_model))
     choices.append(custom)
 
     choice = questionary.select("Model", choices=choices, default=current_model).ask()

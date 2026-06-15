@@ -32,13 +32,18 @@ CONFIG_FIELDS = (
     "languages",
 )
 
-# Choice presets surfaced by the interactive settings editor
-MODEL_PRESETS = (
-    "anthropic:claude-haiku-4-5",
-    "anthropic:claude-sonnet-4-6",
-    "anthropic:claude-opus-4-8",
-    "openai:gpt-4o-mini",
-)
+# Choice presets surfaced by the interactive settings editor, each mapped to a
+# short blurb describing how it differs from the others
+MODEL_PRESETS = {
+    "anthropic:claude-haiku-4-5": "fast, cheap Anthropic default",
+    "anthropic:claude-sonnet-4-6": "balanced Anthropic; stronger quality",
+    "anthropic:claude-opus-4-8": "most capable Anthropic; slowest, priciest",
+    "openai:gpt-4o-mini": "cheap, reliable OpenAI workhorse",
+    "openai:gpt-4.1-nano": "cheaper, faster than 4o-mini",
+    "openai:gpt-5-nano": "cheapest, fastest GPT-5 tier",
+    "google_genai:gemini-3.1-flash-lite": "free tier; cheapest, fastest Gemini",
+    "google_genai:gemini-3.5-flash": "free tier; strong Gemini Flash",
+}
 STYLE_CHOICES = ("bullets", "paragraph")
 LENGTH_CHOICES = ("short", "medium", "long")
 
