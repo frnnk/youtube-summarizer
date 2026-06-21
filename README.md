@@ -33,19 +33,51 @@ yt-summarize "https://youtu.be/U93EPbwyrUA"
 
 ## Installation
 
-Requires [`uv`](https://docs.astral.sh/uv/) and Python ≥3.12.
+Requires [`uv`](https://docs.astral.sh/uv/) and Python ≥3.12, and runs on Linux and macOS only. Windows isn't supported directly, but it works fine inside [WSL](https://learn.microsoft.com/windows/wsl/). There are two ways to set this up: pick **regular installation** if you just want to use the tool, or **dev installation** if you want to work on the code itself.
 
-**Install from GitHub** (callable from anywhere as `yt-summarize`):
+### Install uv
+
+Both flows below need [`uv`](https://docs.astral.sh/uv/). If you don't already have it, the official standalone installer is a single command:
 
 ```bash
-uv tool install --reinstall git+https://github.com/frnnk/youtube-description
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+For other methods (Homebrew, `pip`, a pinned version), see uv's [installation guide](https://docs.astral.sh/uv/getting-started/installation/).
+
+### Regular installation
+
+This installs `yt-summarize` as a global command you can run from any directory. Three steps: install the tool, set your API key, then pick your model.
+
+**Step 1: Install the tool.**
+
+```bash
+uv tool install --reinstall git+https://github.com/frnnk/youtube-summarizer
 ```
 
 Re-run the same command anytime to pull the latest commit. `--reinstall` forces uv to rebuild from source: without it, a second run sees the tool is already installed and does nothing, leaving you on old code. The flag is harmless on a first install.
 
 After installing, `uv` will tell you if its bin directory isn't on `PATH` yet; follow its hint (typically `uv tool update-shell`, then restart your terminal) so the `yt-summarize` command is reachable.
 
-**Set an API key.** The key is a secret, so it lives in the environment, not the config file. Export the one variable matching your model's provider, or an error will be thrown. The variable name is fixed per provider:
+**Step 2: Set your API key.**
+
+The key is a secret, so it lives in an environment variable, not the config file. The easiest way to make it stick is to add one line to your shell's startup file so it's set every time you open a terminal.
+
+First, find out which shell you're running:
+
+```bash
+echo $SHELL
+```
+
+The output ends in the name of your shell. Use it to find the startup file you'll edit:
+
+| If `echo $SHELL` ends in… | Your shell is | Edit this file |
+|---|---|---|
+| `/bash` | bash | `~/.bashrc` (Linux) or `~/.bash_profile` (macOS) |
+| `/zsh` | zsh | `~/.zshrc` (the default on modern macOS) |
+| anything else | that shell | that shell's startup file |
+
+Next, pick the environment variable that matches your provider. You only need the one for the model you plan to use:
 
 | Provider | Environment variable | Key format |
 |---|---|---|
@@ -53,7 +85,7 @@ After installing, `uv` will tell you if its bin directory isn't on `PATH` yet; f
 | OpenAI | `OPENAI_API_KEY` | `sk-proj-...` or `sk-...` |
 | Google (Gemini) | `GOOGLE_API_KEY` | `AIza...` |
 
-Append the line for your provider to your shell startup file, then reload it. Paste the **entire** key, not a truncated snippet: the `...` below is a placeholder for the full string the provider gave you (typically 40 or more characters), and a partial key authenticates to nothing.
+Append the matching line to the startup file you found above, then reload it so the change takes effect in your current terminal. The examples below write to `~/.bashrc`; if your file is `~/.zshrc` (or something else), swap that in for both the `>>` target and the `source` line. Paste the **entire** key, not a truncated snippet: the `...` is a placeholder for the full string the provider gave you (typically 40 or more characters), and a partial key authenticates to nothing.
 
 ```bash
 echo 'export ANTHROPIC_API_KEY="sk-ant-your-full-key-here"' >> ~/.bashrc   # Anthropic
@@ -62,24 +94,34 @@ echo 'export GOOGLE_API_KEY="AIza-your-full-key-here"'      >> ~/.bashrc   # Goo
 source ~/.bashrc
 ```
 
-**Point the model at your key.** The default model is `anthropic:claude-haiku-4-5`. If you supplied an OpenAI or Google key instead, you must tell the tool which model to use, otherwise it will try the default Anthropic model and fail with a missing-key error. Run the interactive editor once after installing to set the model to match your provider:
+> **On security.** Storing a key in your shell startup file is the simplest setup, not the most secure: it sits in a plaintext file readable by anything running as your user. For personal use that's a reasonable trade-off. If you'd rather avoid it, any other way of getting the variable into the tool's environment works just as well, a secrets manager, a [`direnv`](https://direnv.net/) `.envrc`, or exporting the variable by hand each session. The tool only cares that the variable is set at the moment it runs.
+
+**Step 3: Pick your model.**
+
+The default model is `anthropic:claude-haiku-4-5`. If you set an Anthropic key, you're already done, skip ahead to [Usage](#usage). If you supplied an OpenAI or Google key instead, you must tell the tool which model to use, otherwise it tries the default Anthropic model and fails with a missing-key error.
+
+Run the interactive settings editor once to set the model to match your provider:
 
 ```bash
-yt-summarize --settings        # set "model" to e.g. openai:gpt-4o-mini or google_genai:gemini-3.5-flash
+yt-summarize --settings
 ```
 
-This persists the choice so every later run uses it. To override for a single run instead, pass `--model provider:model`.
+This opens an arrow-key menu. Highlight **model**, press Enter, and set it to match your key, for example `openai:gpt-4o-mini` or `google_genai:gemini-3.5-flash`. The choice is saved to your config file, so every later run uses it automatically. To override it for a single run instead, pass `--model provider:model`.
 
-**Dev workflow** (run from a local clone, picks up code changes immediately):
+To remove the tool later: `uv tool uninstall youtube-summarizer`.
+
+### Dev installation
+
+This is for working on the code itself. Instead of installing a built copy, you clone the repository and run the tool straight from your local checkout, so any edit you make to the source takes effect on the next run, with no reinstall step.
 
 ```bash
-git clone https://github.com/frnnk/youtube-description
-cd youtube-description
+git clone https://github.com/frnnk/youtube-summarizer
+cd youtube-summarizer
 uv sync
 uv run yt-summarize "https://youtu.be/U93EPbwyrUA"
 ```
 
-**Uninstall**: `uv tool uninstall youtube-summarizer`
+`uv sync` builds a virtual environment from `uv.lock`, and `uv run` executes the tool inside it. You still need an API key set in your environment, so follow Step 2 above if you haven't already. For a repo-local config, copy `settings.example.json` to `settings.dev.json` (see [Configuration](#configuration)). To uninstall, just delete the cloned directory.
 
 ## Usage
 
